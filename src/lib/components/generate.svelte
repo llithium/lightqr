@@ -19,6 +19,17 @@
 			? URL.createObjectURL(new Blob([qrCode], { type: 'image/gif' }))
 			: null
 	);
+
+	const typeLabels = new Map([
+		['svg', 'SVG'],
+		['gif', 'Image']
+	]);
+	const ecLabel = new Map([
+		['low', 'Low (7%)'],
+		['medium', 'Medium (15%)'],
+		['quartile', 'Quartile (25%)'],
+		['high', 'High (30%)']
+	]);
 </script>
 
 <div class="flex w-full gap-4">
@@ -30,22 +41,22 @@
 		<Card.Content class="h-full flex flex-col gap-4">
 			<div>
 				<Label for="text">Text or URL</Label>
-				<Input bind:value={text} type="text" id="text" maxlength={1000} />
+				<Input autofocus bind:value={text} type="text" id="text" maxlength={1000} />
 			</div>
 			<div>
 				<Label for="type">Type</Label>
 				<Select.Root bind:value={type} name="type" type="single">
-					<Select.Trigger class="w-full">{capitalize(type)}</Select.Trigger>
+					<Select.Trigger class="w-full">{typeLabels.get(type)}</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="svg">SVG</Select.Item>
-						<Select.Item value="gif">Gif</Select.Item>
+						<Select.Item value="gif">Image</Select.Item>
 					</Select.Content>
 				</Select.Root>
 			</div>
 			<div>
 				<Label for="errorCorrection">Error Correction</Label>
 				<Select.Root bind:value={ecc} name="errorCorrection" type="single">
-					<Select.Trigger class="w-full">{capitalize(ecc)}</Select.Trigger>
+					<Select.Trigger class="w-full">{ecLabel.get(ecc)}</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="low">Low (7%)</Select.Item>
 						<Select.Item value="medium">Medium (15%)</Select.Item>
