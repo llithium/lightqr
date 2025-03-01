@@ -6,18 +6,17 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import Download from 'lucide-svelte/icons/download';
 	import * as Select from '$lib/components/ui/select/index.js';
-	import { capitalize } from '@/utils';
 	import type { QRCodeType } from '@/types';
 
 	let text = $state('');
 	let ecc: ErrorCorrection = $state('medium');
-	let type: QRCodeType = $state('svg');
+	let type: QRCodeType = $state('gif');
 	let scale = $derived((type as QRCodeType) === 'gif' ? 40 : 2);
 	let qrCode = $derived(encodeQR(text, type, { ecc: ecc, border: 2, scale: scale }));
 	let blob = $derived(
 		(type as QRCodeType) === 'gif'
 			? URL.createObjectURL(new Blob([qrCode], { type: 'image/gif' }))
-			: null
+			: URL.createObjectURL(new Blob([qrCode], { type: 'image/svg+xml' }))
 	);
 
 	const typeLabels = new Map([
@@ -48,8 +47,8 @@
 				<Select.Root bind:value={type} name="type" type="single">
 					<Select.Trigger class="w-full">{typeLabels.get(type)}</Select.Trigger>
 					<Select.Content>
-						<Select.Item value="svg">SVG</Select.Item>
 						<Select.Item value="gif">Image</Select.Item>
+						<Select.Item value="svg">SVG</Select.Item>
 					</Select.Content>
 				</Select.Root>
 			</div>
@@ -83,7 +82,7 @@
 			{/if}
 		</Card.Content>
 		<Card.Footer>
-			<Button variant="outline" class="w-full">
+			<Button download="QR Code" href={blob} variant="outline" class="w-full">
 				<Download class="mr-2 size-4" />
 				Downlaod
 			</Button>
