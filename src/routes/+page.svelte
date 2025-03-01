@@ -6,7 +6,9 @@
 	let activeTab = $state(page.url.searchParams.get('tab') || 'generate');
 
 	function onTabChange() {
-		goto(`/?tab=${activeTab}`);
+		const newURL = new URL(page.url);
+		newURL.searchParams.set('tab', activeTab);
+		goto(newURL);
 	}
 </script>
 

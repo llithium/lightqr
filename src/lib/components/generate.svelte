@@ -8,12 +8,17 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import type { QRCodeType } from '@/types';
 	import Slider from './ui/slider/slider.svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let text = $state('');
-	let ecc: ErrorCorrection = $state('medium');
-	let type: QRCodeType = $state('gif');
+	let ecc: ErrorCorrection = $state(
+		(page.url.searchParams.get('ec') as ErrorCorrection) || 'medium'
+	);
+	let type: QRCodeType = $state((page.url.searchParams.get('type') as QRCodeType) || 'gif');
 	let sliderValue = $state(25);
 	let scale = $derived((type as QRCodeType) === 'gif' ? sliderValue : 1);
+	//@ts-expect-error
 	let qrCode = $derived(encodeQR(text, type, { ecc: ecc, border: 1, scale: scale }));
 	let blob = $derived(
 		(type as QRCodeType) === 'gif'
@@ -21,6 +26,21 @@
 			: URL.createObjectURL(new Blob([qrCode], { type: 'image/svg+xml' }))
 	);
 
+	function onTypeChange() {
+		const newURL = new URL(page.url);
+		newURL.searchParams.set('type', type);
+		goto(newURL, { replaceState: true });
+	}
+	function onEcChange() {
+		const newURL = new URL(page.url);
+		newURL.searchParams.set('ec', ecc);
+		goto(newURL, { replaceState: true });
+	}
+	function onScaleChange() {
+		const newURL = new URL(page.url);
+		newURL.searchParams.set('scale', sliderValue.toString());
+		goto(newURL, { replaceState: true });
+	}
 	const typeLabels = new Map([
 		['svg', 'SVG'],
 		['gif', 'Image']
@@ -46,7 +66,7 @@
 			</div>
 			<div class="space-y-2">
 				<Label for="type">Type</Label>
-				<Select.Root bind:value={type} name="type" type="single">
+				<Select.Root onValueChange={onTypeChange} bind:value={type} name="type" type="single">
 					<Select.Trigger class="w-full h-10">{typeLabels.get(type)}</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="gif">Image</Select.Item>
@@ -57,12 +77,25 @@
 			{#if type === 'gif'}
 				<div class="space-y-2">
 					<Label for="scale">Scale: {sliderValue}px</Label>
-					<Slider type="single" bind:value={sliderValue} min={1} max={40} step={1} class="w-full" />
+					<Slider
+						onValueChange={onScaleChange}
+						type="single"
+						bind:value={sliderValue}
+						min={1}
+						max={40}
+						step={1}
+						class="w-full"
+					/>
 				</div>
 			{/if}
 			<div class="space-y-2">
 				<Label for="errorCorrection">Error Correction</Label>
-				<Select.Root bind:value={ecc} name="errorCorrection" type="single">
+				<Select.Root
+					onValueChange={onEcChange}
+					bind:value={ecc}
+					name="errorCorrection"
+					type="single"
+				>
 					<Select.Trigger class="w-full h-10">{ecLabel.get(ecc)}</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="low">Low (7%)</Select.Item>
