@@ -4,6 +4,10 @@
 	let { children }: { children: Snippet } = $props();
 </script>
 
+<svelte:head>
+	<title>LightQR</title>
+	<meta name="description" content="QR Code generator" />
+</svelte:head>
 <div>
 	{@render children()}
 </div>
