@@ -12,10 +12,9 @@
 	let text = $state('');
 	let ecc: ErrorCorrection = $state('medium');
 	let type: QRCodeType = $state('gif');
-	let sliderValue = $state(40);
-	let scale = $derived((type as QRCodeType) === 'gif' ? sliderValue : 2);
-
-	let qrCode = $derived(encodeQR(text, type, { ecc: ecc, border: 2, scale: scale }));
+	let sliderValue = $state(25);
+	let scale = $derived((type as QRCodeType) === 'gif' ? sliderValue : 1);
+	let qrCode = $derived(encodeQR(text, type, { ecc: ecc, border: 1, scale: scale }));
 	let blob = $derived(
 		(type as QRCodeType) === 'gif'
 			? URL.createObjectURL(new Blob([qrCode], { type: 'image/gif' }))
@@ -57,7 +56,7 @@
 			</div>
 			{#if type === 'gif'}
 				<div class="space-y-2">
-					<Label for="size">Size: {sliderValue * 25}px</Label>
+					<Label for="scale">Scale: {sliderValue}px</Label>
 					<Slider type="single" bind:value={sliderValue} min={1} max={40} step={1} class="w-full" />
 				</div>
 			{/if}
@@ -83,9 +82,11 @@
 			<Card.Title>Preview</Card.Title>
 			<!-- <Card.Description>Card Description</Card.Description> -->
 		</Card.Header>
-		<Card.Content>
+		<Card.Content class="w-full h-full flex justify-center items-center">
 			{#if type === 'svg'}
-				{@html qrCode}
+				<div class="*:h-full *:w-full h-full w-full">
+					{@html qrCode}
+				</div>
 			{:else if type === 'gif'}
 				<img src={blob} alt={text} />
 			{/if}
