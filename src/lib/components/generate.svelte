@@ -125,7 +125,7 @@
 			{/if}
 		</Card.Content>
 		<Card.Footer class="w-full">
-			<Button download="QR Code" href={blob} variant="outline" class="w-full">
+			<Button download="QR Code" href={blob} class="w-full">
 				<Download class="mr-2 size-4" />
 				Downlaod
 			</Button>
