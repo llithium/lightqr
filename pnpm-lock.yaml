@@ -11,6 +11,9 @@ importers:
       '@paulmillr/qr':
         specifier: ^0.3.0
         version: 0.3.0
+      debounce:
+        specifier: ^2.2.0
+        version: 2.2.0
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.5
@@ -864,6 +867,10 @@ packages:
 
   data-urls@5.0.0:
     resolution: {integrity: sha512-ZYP5VBHshaDAiVZxjbRVcFJpc+4xGgT0bK3vzy1HLN8jTO975HEbuYzZJcHoQEY5K1a0z8YayJkyVETa08eNTg==}
+    engines: {node: '>=18'}
+
+  debounce@2.2.0:
+    resolution: {integrity: sha512-Xks6RUDLZFdz8LIdR6q0MTH44k7FikOmnh5xkSjMig6ch45afc8sjTjRQf3P6ax8dMgcQrYO/AR2RGWURrruqw==}
     engines: {node: '>=18'}
 
   debug@4.4.0:
@@ -2693,6 +2700,8 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.1.1
+
+  debounce@2.2.0: {}
 
   debug@4.4.0:
     dependencies:

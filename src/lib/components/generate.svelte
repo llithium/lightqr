@@ -6,25 +6,36 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import Download from 'lucide-svelte/icons/download';
 	import * as Select from '$lib/components/ui/select/index.js';
-	import type { QRCodeType } from '@/types';
 	import Slider from './ui/slider/slider.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { svgToPng } from '@paulmillr/qr/dom.js';
+	import debounce from 'debounce';
 
 	let text = $state('');
 	let ecc: ErrorCorrection = $state(
 		(page.url.searchParams.get('ec') as ErrorCorrection) || 'medium'
 	);
-	let type: QRCodeType = $state((page.url.searchParams.get('type') as QRCodeType) || 'gif');
-	let sliderValue = $state(25);
-	let scale = $derived((type as QRCodeType) === 'gif' ? sliderValue : 1);
-	//@ts-expect-error
-	let qrCode = $derived(encodeQR(text, type, { ecc: ecc, border: 1, scale: scale }));
+	let type = $state(page.url.searchParams.get('type') || 'png');
+	let sliderValue = $state(300);
+	let qrCode = $derived(encodeQR(text, 'svg', { ecc: ecc, border: 1, scale: 1 }));
+
+	let pngData = $state<string | null>(null);
 	let blob = $derived(
-		(type as QRCodeType) === 'gif'
-			? URL.createObjectURL(new Blob([qrCode], { type: 'image/gif' }))
-			: URL.createObjectURL(new Blob([qrCode], { type: 'image/svg+xml' }))
+		type === 'svg' ? URL.createObjectURL(new Blob([qrCode], { type: 'image/svg+xml' })) : null
 	);
+
+	async function updatePngData() {
+		if (type === 'png') {
+			pngData = await svgToPng(qrCode, sliderValue, sliderValue);
+		} else {
+			pngData = null;
+		}
+	}
+
+	$effect(() => {
+		updatePngData();
+	});
 
 	function onTypeChange() {
 		const newURL = new URL(page.url);
@@ -36,14 +47,14 @@
 		newURL.searchParams.set('ec', ecc);
 		goto(newURL, { replaceState: true });
 	}
-	function onScaleChange() {
+	function onSizeChange() {
 		const newURL = new URL(page.url);
-		newURL.searchParams.set('scale', sliderValue.toString());
+		newURL.searchParams.set('size', sliderValue.toString());
 		goto(newURL, { replaceState: true });
 	}
 	const typeLabels = new Map([
 		['svg', 'SVG'],
-		['gif', 'Image']
+		['png', 'PNG']
 	]);
 	const ecLabel = new Map([
 		['low', 'Low (7%)'],
@@ -69,21 +80,21 @@
 				<Select.Root onValueChange={onTypeChange} bind:value={type} name="type" type="single">
 					<Select.Trigger class="w-full h-10">{typeLabels.get(type)}</Select.Trigger>
 					<Select.Content>
-						<Select.Item value="gif">Image</Select.Item>
+						<Select.Item value="png">PNG</Select.Item>
 						<Select.Item value="svg">SVG</Select.Item>
 					</Select.Content>
 				</Select.Root>
 			</div>
-			{#if type === 'gif'}
+			{#if type === 'png'}
 				<div class="space-y-2">
-					<Label for="scale">Scale: {sliderValue}px</Label>
+					<Label for="size">Size: {sliderValue}px</Label>
 					<Slider
-						onValueChange={onScaleChange}
+						onValueChange={debounce(onSizeChange, 300)}
 						type="single"
 						bind:value={sliderValue}
-						min={1}
-						max={40}
-						step={1}
+						min={25}
+						max={1000}
+						step={5}
 						class="w-full"
 					/>
 				</div>
@@ -120,12 +131,12 @@
 				<div class="*:h-full *:w-full h-full w-full">
 					{@html qrCode}
 				</div>
-			{:else if type === 'gif'}
-				<img src={blob} alt={text} />
+			{:else if type === 'png'}
+				<img src={pngData} alt={text} />
 			{/if}
 		</Card.Content>
 		<Card.Footer class="w-full">
-			<Button download="QR Code" href={blob} class="w-full">
+			<Button download="QR Code" href={blob || pngData} class="w-full">
 				<Download class="mr-2 size-4" />
 				Downlaod
 			</Button>
