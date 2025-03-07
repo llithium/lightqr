@@ -64,8 +64,8 @@
 	]);
 </script>
 
-<div class="flex w-full gap-4">
-	<Card.Root class="w-1/2">
+<div class="flex flex-col md:flex-row w-full gap-4">
+	<Card.Root class="md:w-1/2">
 		<Card.Header>
 			<Card.Title>Generator</Card.Title>
 			<!-- <Card.Description>Card Description</Card.Description> -->
@@ -121,7 +121,7 @@
 			<p>Card Footer</p>
 		</Card.Footer> -->
 	</Card.Root>
-	<Card.Root class="w-1/2 flex flex-col justify-between items-center">
+	<Card.Root class="md:w-1/2 flex flex-col justify-between items-center">
 		<Card.Header>
 			<Card.Title>Preview</Card.Title>
 			<!-- <Card.Description>Card Description</Card.Description> -->
