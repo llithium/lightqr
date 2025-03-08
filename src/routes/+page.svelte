@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import Generate from '@/components/generate.svelte';
+	import Scan from '@/scan.svelte';
 	let activeTab = $state(page.url.searchParams.get('tab') || 'generate');
 
 	function onTabChange() {
@@ -20,7 +21,7 @@
 				<Tabs.Trigger class="w-1/2" value="scan">Scan</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="generate"><Generate /></Tabs.Content>
-			<Tabs.Content value="scan"></Tabs.Content>
+			<Tabs.Content value="scan"><Scan /></Tabs.Content>
 		</Tabs.Root>
 	</section>
 </main>
