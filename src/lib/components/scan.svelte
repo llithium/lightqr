@@ -84,7 +84,7 @@
 		<div class="grid w-full h-fit items-center gap-1.5">
 			<Label for="picture">QR Code</Label>
 			<Input
-				class={`${files ? null : 'bg-primary'}`}
+				class={`${files && files.length > 0 ? null : 'bg-primary'}`}
 				bind:files
 				id="picture"
 				type="file"
