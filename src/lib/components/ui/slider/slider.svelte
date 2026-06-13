@@ -28,7 +28,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 	{#snippet children({ thumbs })}
 		<span
 			data-orientation={orientation}
-			class="bg-primary/20 relative grow overflow-hidden rounded-full data-[orientation='horizontal']:h-1.5 data-[orientation='vertical']:h-full data-[orientation='horizontal']:w-full data-[orientation='vertical']:w-1.5"
+			class="bg-primary/20 relative grow overflow-hidden rounded-full data-[orientation='horizontal']:h-2 data-[orientation='vertical']:h-full data-[orientation='horizontal']:w-full data-[orientation='vertical']:w-2"
 		>
 			<SliderPrimitive.Range
 				class="bg-primary absolute data-[orientation='horizontal']:h-full data-[orientation='vertical']:w-full"
@@ -37,7 +37,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 		{#each thumbs as thumb}
 			<SliderPrimitive.Thumb
 				index={thumb}
-				class="border-primary/50 bg-background focus-visible:ring-ring block size-4 rounded-full border shadow transition-colors focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50"
+				class="border-primary bg-background focus-visible:ring-ring block size-5 rounded-full border-[3px] shadow-md shadow-primary/30 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50"
 			/>
 		{/each}
 	{/snippet}
