@@ -4,26 +4,27 @@
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
-		--foreground: 0 0% 3.9%;
-		--muted: 0 0% 96.1%;
-		--muted-foreground: 0 0% 45.1%;
+		/* Soft & Friendly — refined emerald on a soft mint canvas */
+		--background: 150 40% 97%;
+		--foreground: 158 42% 14%;
+		--muted: 150 33% 92%;
+		--muted-foreground: 156 13% 45%;
 		--popover: 0 0% 100%;
-		--popover-foreground: 0 0% 3.9%;
+		--popover-foreground: 158 42% 14%;
 		--card: 0 0% 100%;
-		--card-foreground: 0 0% 3.9%;
-		--border: 0 0% 89.8%;
-		--input: 0 0% 89.8%;
-		--primary: 144 72.6% 71.4%;
-		--primary-foreground: 0 0% 9%;
-		--secondary: 0 0% 96.1%;
-		--secondary-foreground: 0 0% 9%;
-		--accent: 0 0% 96.1%;
-		--accent-foreground: 0 0% 9%;
+		--card-foreground: 158 42% 14%;
+		--border: 152 26% 88%;
+		--input: 152 26% 88%;
+		--primary: 155 60% 47%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 150 33% 94%;
+		--secondary-foreground: 158 42% 16%;
+		--accent: 150 40% 92%;
+		--accent-foreground: 158 42% 16%;
 		--destructive: 0 72.2% 50.6%;
 		--destructive-foreground: 0 0% 98%;
-		--ring: 0 0% 3.9%;
-		--radius: 0.5rem;
+		--ring: 155 60% 47%;
+		--radius: 1rem;
 		--sidebar-background: 0 0% 98%;
 		--sidebar-foreground: 240 5.3% 26.1%;
 		--sidebar-primary: 240 5.9% 10%;
@@ -35,25 +36,26 @@
 	}
 
 	.dark {
-		--background: 0 0% 3.9%;
-		--foreground: 0 0% 98%;
-		--muted: 0 0% 14.9%;
-		--muted-foreground: 0 0% 63.9%;
-		--popover: 0 0% 3.9%;
-		--popover-foreground: 0 0% 98%;
-		--card: 0 0% 3.9%;
-		--card-foreground: 0 0% 98%;
-		--border: 0 0% 14.9%;
-		--input: 0 0% 14.9%;
-		--primary: 144 72.6% 71.4%;
-		--primary-foreground: 0 0% 9%;
-		--secondary: 0 0% 14.9%;
-		--secondary-foreground: 0 0% 98%;
-		--accent: 0 0% 14.9%;
-		--accent-foreground: 0 0% 98%;
+		/* Warm-dark green, same emerald accent */
+		--background: 160 24% 7%;
+		--foreground: 150 30% 93%;
+		--muted: 158 16% 16%;
+		--muted-foreground: 150 12% 60%;
+		--popover: 158 22% 10%;
+		--popover-foreground: 150 30% 93%;
+		--card: 158 20% 11%;
+		--card-foreground: 150 30% 93%;
+		--border: 158 18% 18%;
+		--input: 158 18% 20%;
+		--primary: 153 62% 52%;
+		--primary-foreground: 158 45% 8%;
+		--secondary: 158 16% 16%;
+		--secondary-foreground: 150 30% 93%;
+		--accent: 158 16% 18%;
+		--accent-foreground: 150 30% 93%;
 		--destructive: 0 62.8% 30.6%;
 		--destructive-foreground: 0 0% 98%;
-		--ring: 0 0% 83.1%;
+		--ring: 153 62% 52%;
 		--sidebar-background: 240 5.9% 10%;
 		--sidebar-foreground: 240 4.8% 95.9%;
 		--sidebar-primary: 224.3 76.3% 48%;
@@ -66,7 +68,14 @@
 }
 @layer base {
 	html {
-		font-family: 'DM Sans', system-ui, sans-serif;
+		font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+	}
+	/* Soft tinted backdrop so cards lift off the page */
+	body {
+		background-image:
+			radial-gradient(900px 520px at 8% -8%, hsl(155 60% 47% / 0.1), transparent 60%),
+			radial-gradient(760px 520px at 108% 12%, hsl(155 60% 47% / 0.08), transparent 55%);
+		background-attachment: fixed;
 	}
 }
 @layer base {
