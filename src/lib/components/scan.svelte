@@ -1,8 +1,8 @@
 <script lang="ts">
-	import decodeQR from '@paulmillr/qr/decode.js';
+	import decodeQR from 'qr/decode.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { svgToPng } from '@paulmillr/qr/dom.js';
+	import { svgToPng } from 'qr/dom.js';
 	import ImageIcon from 'lucide-svelte/icons/image';
 	import Check from 'lucide-svelte/icons/check';
 

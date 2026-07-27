@@ -1,5 +1,5 @@
 <script lang="ts">
-	import encodeQR, { type ErrorCorrection } from '@paulmillr/qr';
+	import encodeQR, { type ErrorCorrection } from 'qr';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -9,7 +9,7 @@
 	import Slider from './ui/slider/slider.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { svgToPng } from '@paulmillr/qr/dom.js';
+	import { svgToPng } from 'qr/dom.js';
 	import debounce from 'debounce';
 
 	let text = $state('');
@@ -73,11 +73,11 @@
 <div class="flex flex-col md:flex-row w-full gap-4">
 	<Card.Root class="md:w-1/2">
 		<Card.Header>
-			<Card.Title>Make a QR code</Card.Title>
+			<Card.Title>Content</Card.Title>
 		</Card.Header>
 		<Card.Content class="h-full flex flex-col gap-4">
 			<div class="space-y-2">
-				<Label for="text">What should it link to?</Label>
+				<!-- <Label for="text">What should it link to?</Label> -->
 				<Input class="h-10" autofocus bind:value={text} type="text" id="text" maxlength={1000} />
 			</div>
 			<div class="grid grid-cols-2 gap-4">
