@@ -14,9 +14,13 @@
 	}
 </script>
 
-<main class="min-h-screen w-full">
-	<section class="mx-auto w-full max-w-5xl px-4 py-8 md:py-12">
-		<Tabs.Root onValueChange={onTabChange} bind:value={activeTab} class="w-full">
+<main class="flex min-h-dvh w-full flex-col">
+	<section class="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8 md:py-10">
+		<Tabs.Root
+			onValueChange={onTabChange}
+			bind:value={activeTab}
+			class="flex w-full flex-1 flex-col"
+		>
 			<header class="mb-8 flex flex-wrap items-center justify-between gap-4">
 				<div class="flex items-center gap-3">
 					<div
@@ -35,8 +39,20 @@
 				</Tabs.List>
 			</header>
 
-			<Tabs.Content value="generate"><Generate /></Tabs.Content>
-			<Tabs.Content value="scan"><Scan /></Tabs.Content>
+			<!-- Display is gated on data-[state=active] so it never overrides the `hidden`
+			     attribute bits-ui puts on the inactive panel. -->
+			<Tabs.Content
+				value="generate"
+				class="flex-1 data-[state=active]:flex data-[state=active]:flex-col data-[state=active]:justify-center"
+			>
+				<Generate />
+			</Tabs.Content>
+			<Tabs.Content
+				value="scan"
+				class="flex-1 data-[state=active]:flex data-[state=active]:flex-col data-[state=active]:justify-center"
+			>
+				<Scan />
+			</Tabs.Content>
 
 			<p class="mt-8 text-center text-sm text-muted-foreground">
 				Tip: higher error-correction survives logos &amp; scuffs · LightQR keeps everything in your

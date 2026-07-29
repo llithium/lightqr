@@ -245,11 +245,15 @@
 	<div class="flex justify-center">
 		{#if imageSrc}
 			<div class="rounded-2xl bg-white p-4 shadow-lg shadow-black/5">
-				<img src={imageSrc} alt="Scanned QR Code" class="max-h-64 w-auto rounded-lg" />
+				<img
+					src={imageSrc}
+					alt="Scanned QR Code"
+					class="max-h-[clamp(11rem,38vh,20rem)] w-auto rounded-lg"
+				/>
 			</div>
 		{:else}
 			<div
-				class="flex aspect-square w-full max-w-xs items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/50 text-center text-sm text-muted-foreground"
+				class="flex aspect-square w-full max-w-[clamp(13rem,40vh,22rem)] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/50 text-center text-sm text-muted-foreground"
 			>
 				Your scanned image<br />will appear here
 			</div>

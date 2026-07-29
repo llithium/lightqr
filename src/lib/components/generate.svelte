@@ -101,7 +101,7 @@
 	}, 300);
 </script>
 
-<div class="grid gap-8 md:grid-cols-2 md:items-start">
+<div class="grid gap-8 md:grid-cols-2 md:items-center">
 	<div class="space-y-5">
 		<div class="space-y-2">
 			<Label for="text">Link or text to encode</Label>
@@ -179,7 +179,9 @@
 		<div
 			class="rounded-2xl bg-white p-4 shadow-lg shadow-black/5 transition-transform duration-200 hover:-translate-y-1"
 		>
-			<div class="flex size-48 items-center justify-center">
+			<!-- Scales with viewport height so tall screens get a bigger preview
+			     instead of dead space, without overflowing short ones. -->
+			<div class="flex size-[clamp(11rem,32vh,17rem)] items-center justify-center">
 				{#if type === 'svg'}
 					<div class="h-full w-full *:h-full *:w-full">
 						<!-- Safe: encodeQR emits its own <svg> of rects; `text` is encoded into the
