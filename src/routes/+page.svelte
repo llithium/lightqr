@@ -10,7 +10,7 @@
 	function onTabChange() {
 		const newURL = new URL(page.url);
 		newURL.searchParams.set('tab', activeTab);
-		goto(newURL);
+		goto(newURL, { replaceState: true, keepFocus: true, noScroll: true });
 	}
 </script>
 

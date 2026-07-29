@@ -70,7 +70,7 @@
 	html {
 		font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 	}
-	/* Soft tinted backdrop so cards lift off the page */
+	/* Soft tinted backdrop so the page isn't a flat wash of colour */
 	body {
 		background-image:
 			radial-gradient(900px 520px at 8% -8%, hsl(155 60% 47% / 0.1), transparent 60%),
