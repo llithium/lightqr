@@ -52,7 +52,10 @@
 	let sliderValue = $state(initialSize());
 	let renderSize = $state(initialSize());
 
-	let qrCode = $derived(encodeQR(text || 'LightQR', 'svg', { ecc, border: 1, scale: 1 }));
+	// Nothing is encoded until there is real content, so the preview never offers a
+	// download for a QR the user didn't ask for.
+	let hasContent = $derived(text.trim().length > 0);
+	let qrCode = $derived(hasContent ? encodeQR(text, 'svg', { ecc, border: 1, scale: 1 }) : null);
 	let eccOption = $derived(EC_OPTIONS.find((option) => option.value === ecc)!);
 
 	let svgUrl = $state<string | null>(null);
@@ -61,7 +64,7 @@
 
 	// One object URL per QR revision, revoked as soon as it is superseded.
 	$effect(() => {
-		if (type !== 'svg') {
+		if (!qrCode || type !== 'svg') {
 			svgUrl = null;
 			return;
 		}
@@ -73,7 +76,7 @@
 	// Rasterising is async, so a slow large render must not overwrite a newer small one.
 	let renderId = 0;
 	$effect(() => {
-		if (type !== 'png') {
+		if (!qrCode || type !== 'png') {
 			pngData = null;
 			return;
 		}
@@ -101,10 +104,12 @@
 	}, 300);
 </script>
 
-<div class="grid gap-8 md:grid-cols-2 md:items-center">
+<div class="grid gap-8 md:grid-cols-2 md:items-start">
 	<div class="space-y-5">
 		<div class="space-y-2">
-			<Label for="text">Link or text to encode</Label>
+			<!-- block: an inline <label> sits inside the wrapper's line box and drops a
+			     few px, which knocks this column out of line with the heading opposite. -->
+			<Label for="text" class="block">Content to encode</Label>
 			<Input
 				class="h-10"
 				bind:value={text}
@@ -117,7 +122,7 @@
 
 		<div class="grid grid-cols-2 gap-4">
 			<div class="space-y-2">
-				<Label for="type">Format</Label>
+				<Label for="type" class="block">Format</Label>
 				<Select.Root
 					onValueChange={(value) => setParam('type', value)}
 					bind:value={type}
@@ -132,7 +137,7 @@
 				</Select.Root>
 			</div>
 			<div class="space-y-2">
-				<Label for="errorCorrection">Error correction</Label>
+				<Label for="errorCorrection" class="block">Error correction</Label>
 				<Select.Root
 					onValueChange={(value) => setParam('ec', value)}
 					bind:value={ecc}
@@ -174,30 +179,43 @@
 	</div>
 
 	<div class="flex flex-col items-center gap-5">
-		<h2 class="text-sm font-bold uppercase tracking-wide text-muted-foreground">Your QR code</h2>
+		<!-- leading-none matches the Label opposite it, so both columns start flush. -->
+		<h2 class="text-sm font-bold uppercase leading-none tracking-wide text-muted-foreground">
+			Your QR code
+		</h2>
 
-		<div
-			class="rounded-2xl bg-white p-4 shadow-lg shadow-black/5 transition-transform duration-200 hover:-translate-y-1"
-		>
-			<!-- Scales with viewport height so tall screens get a bigger preview
-			     instead of dead space, without overflowing short ones. -->
-			<div class="flex size-[clamp(11rem,32vh,17rem)] items-center justify-center">
-				{#if type === 'svg'}
-					<div class="h-full w-full *:h-full *:w-full">
-						<!-- Safe: encodeQR emits its own <svg> of rects; `text` is encoded into the
-						     module matrix, never interpolated into the markup. -->
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						{@html qrCode}
-					</div>
-				{:else}
-					<img
-						src={pngData}
-						alt={text ? `QR code for ${text}` : 'QR code'}
-						class="h-full w-full object-contain [image-rendering:pixelated]"
-					/>
-				{/if}
+		{#if qrCode}
+			<div
+				class="rounded-2xl bg-white p-4 shadow-lg shadow-black/5 transition-transform duration-200 hover:-translate-y-1"
+			>
+				<!-- Scales with viewport height so tall screens get a bigger preview
+				     instead of dead space, without overflowing short ones. -->
+				<div class="flex size-[clamp(11rem,32vh,17rem)] items-center justify-center">
+					{#if type === 'svg'}
+						<div class="h-full w-full *:h-full *:w-full">
+							<!-- Safe: encodeQR emits its own <svg> of rects; `text` is encoded into the
+							     module matrix, never interpolated into the markup. -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html qrCode}
+						</div>
+					{:else}
+						<img
+							src={pngData}
+							alt={`QR code for ${text}`}
+							class="h-full w-full object-contain [image-rendering:pixelated]"
+						/>
+					{/if}
+				</div>
 			</div>
-		</div>
+		{:else}
+			<!-- Same footprint as the rendered preview, so the column doesn't jump
+			     the moment the first character is typed. -->
+			<div
+				class="flex size-[calc(clamp(11rem,32vh,17rem)+2rem)] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/50 p-4 text-center text-sm text-muted-foreground"
+			>
+				Your QR code<br />will appear here
+			</div>
+		{/if}
 
 		<div class="flex flex-wrap justify-center gap-2">
 			<span
@@ -216,10 +234,12 @@
 			>
 		</div>
 
+		<!-- With no href the Button renders a real <button>, so `disabled` actually
+		     blocks activation rather than just dimming a live link. -->
 		<Button
-			download={`qr-code.${type}`}
-			href={downloadUrl}
-			aria-disabled={!downloadUrl}
+			download={downloadUrl ? `qr-code.${type}` : undefined}
+			href={downloadUrl ?? undefined}
+			disabled={!downloadUrl}
 			class="w-full max-w-xs"
 		>
 			<Download class="mr-2 size-4" />
