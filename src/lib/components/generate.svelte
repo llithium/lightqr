@@ -23,13 +23,29 @@
 		{ value: 'high', label: 'High', percent: '30%' }
 	] as const satisfies readonly { value: ErrorCorrection; label: string; percent: string }[];
 
-	const TYPE_LABELS = { png: 'PNG', svg: 'SVG' } as const;
+	const TYPE_LABELS = {
+		png: 'PNG',
+		jpg: 'JPEG',
+		webp: 'WebP',
+		svg: 'SVG'
+	} as const;
 	type FileType = keyof typeof TYPE_LABELS;
+	type RasterType = Exclude<FileType, 'svg'>;
+
+	const RASTER_MIME = {
+		png: 'image/png',
+		jpg: 'image/jpeg',
+		webp: 'image/webp'
+	} as const satisfies Record<RasterType, string>;
+
+	function isRasterType(type: FileType): type is RasterType {
+		return type !== 'svg';
+	}
 
 	// The URL is user-editable, so every param is validated before it reaches state.
 	function initialType(): FileType {
 		const raw = page.url.searchParams.get('type');
-		return raw === 'svg' || raw === 'png' ? raw : 'png';
+		return raw === 'svg' || raw === 'png' || raw === 'jpg' || raw === 'webp' ? raw : 'png';
 	}
 
 	function initialEcc(): ErrorCorrection {
@@ -44,11 +60,61 @@
 		return Math.min(MAX_SIZE, Math.max(MIN_SIZE, snapped));
 	}
 
+	function svgToRaster(
+		svg: string,
+		width: number,
+		height: number,
+		type: RasterType
+	): Promise<string> {
+		if (type === 'png') return svgToPng(svg, width, height);
+
+		return new Promise((resolve, reject) => {
+			const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+			const image = new Image();
+			const cleanup = () => URL.revokeObjectURL(url);
+
+			image.onload = () => {
+				try {
+					const canvas = document.createElement('canvas');
+					canvas.width = width;
+					canvas.height = height;
+
+					const context = canvas.getContext('2d');
+					if (!context) throw new Error('Unable to create canvas context');
+
+					// JPEG has no alpha channel, and a white background is appropriate for QR codes.
+					context.fillStyle = '#ffffff';
+					context.fillRect(0, 0, width, height);
+					context.imageSmoothingEnabled = false;
+					context.drawImage(image, 0, 0, width, height);
+
+					const mime = RASTER_MIME[type];
+					const dataUrl = canvas.toDataURL(mime, 1);
+					if (!dataUrl.startsWith(`data:${mime}`)) {
+						throw new Error(`${TYPE_LABELS[type]} export is not supported by this browser`);
+					}
+
+					resolve(dataUrl);
+				} catch (error) {
+					reject(error);
+				} finally {
+					cleanup();
+				}
+			};
+
+			image.onerror = () => {
+				cleanup();
+				reject(new Error('Unable to render QR code'));
+			};
+			image.src = url;
+		});
+	}
+
 	let text = $state('');
 	let type = $state<FileType>(initialType());
 	let ecc = $state<ErrorCorrection>(initialEcc());
 	// `sliderValue` tracks the thumb for the live label; `renderSize` lags behind it so a
-	// drag across the range doesn't re-encode a 1000px PNG on every tick.
+	// drag across the range doesn't re-encode a 1000px raster image on every tick.
 	let sliderValue = $state(initialSize());
 	let renderSize = $state(initialSize());
 
@@ -59,8 +125,8 @@
 	let eccOption = $derived(EC_OPTIONS.find((option) => option.value === ecc)!);
 
 	let svgUrl = $state<string | null>(null);
-	let pngData = $state<string | null>(null);
-	let downloadUrl = $derived(type === 'svg' ? svgUrl : pngData);
+	let rasterData = $state<string | null>(null);
+	let downloadUrl = $derived(type === 'svg' ? svgUrl : rasterData);
 
 	// One object URL per QR revision, revoked as soon as it is superseded.
 	$effect(() => {
@@ -73,22 +139,27 @@
 		return () => URL.revokeObjectURL(url);
 	});
 
-	// Rasterising is async, so a slow large render must not overwrite a newer small one.
+	// Rasterising is async, so a slow large render must not overwrite a newer one.
 	let renderId = 0;
 	$effect(() => {
-		if (!qrCode || type !== 'png') {
-			pngData = null;
+		if (!qrCode || !isRasterType(type)) {
+			++renderId;
+			rasterData = null;
 			return;
 		}
+
 		const id = ++renderId;
 		const svg = qrCode;
 		const size = renderSize;
-		svgToPng(svg, size, size)
+		const outputType = type;
+		rasterData = null;
+
+		svgToRaster(svg, size, size, outputType)
 			.then((data) => {
-				if (id === renderId) pngData = data;
+				if (id === renderId) rasterData = data;
 			})
 			.catch(() => {
-				if (id === renderId) pngData = null;
+				if (id === renderId) rasterData = null;
 			});
 	});
 
@@ -132,6 +203,8 @@
 					<Select.Trigger class="h-10 w-full">{TYPE_LABELS[type]}</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="png">PNG</Select.Item>
+						<Select.Item value="jpg">JPEG</Select.Item>
+						<Select.Item value="webp">WebP</Select.Item>
 						<Select.Item value="svg">SVG</Select.Item>
 					</Select.Content>
 				</Select.Root>
@@ -156,7 +229,7 @@
 			</div>
 		</div>
 
-		{#if type === 'png'}
+		{#if type !== 'svg'}
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
 					<Label for="size">Size</Label>
@@ -200,7 +273,7 @@
 						</div>
 					{:else}
 						<img
-							src={pngData}
+							src={rasterData ?? undefined}
 							alt={`QR code for ${text}`}
 							class="h-full w-full object-contain [image-rendering:pixelated]"
 						/>
@@ -222,7 +295,7 @@
 				class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
 				>{TYPE_LABELS[type]}</span
 			>
-			{#if type === 'png'}
+			{#if type !== 'svg'}
 				<span
 					class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
 					>{sliderValue}×{sliderValue}</span
