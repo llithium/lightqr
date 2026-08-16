@@ -110,6 +110,21 @@
 		});
 	}
 
+	function dataUrlSize(dataUrl: string): number {
+		const comma = dataUrl.indexOf(',');
+		if (comma === -1) return 0;
+
+		const base64 = dataUrl.slice(comma + 1);
+		const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+		return Math.floor((base64.length * 3) / 4) - padding;
+	}
+
+	function formatBytes(bytes: number): string {
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
 	let text = $state('');
 	let type = $state<FileType>(initialType());
 	let ecc = $state<ErrorCorrection>(initialEcc());
@@ -127,6 +142,15 @@
 	let svgUrl = $state<string | null>(null);
 	let rasterData = $state<string | null>(null);
 	let downloadUrl = $derived(type === 'svg' ? svgUrl : rasterData);
+	let fileSize = $derived(
+		!qrCode
+			? null
+			: type === 'svg'
+				? new Blob([qrCode], { type: 'image/svg+xml' }).size
+				: rasterData
+					? dataUrlSize(rasterData)
+					: null
+	);
 
 	// One object URL per QR revision, revoked as soon as it is superseded.
 	$effect(() => {
@@ -299,6 +323,17 @@
 				<span
 					class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
 					>{sliderValue}×{sliderValue}</span
+				>
+			{/if}
+			{#if fileSize !== null}
+				<span
+					class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold tabular-nums text-muted-foreground"
+					>{formatBytes(fileSize)}</span
+				>
+			{:else if qrCode && type !== 'svg'}
+				<span
+					class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
+					>Calculating…</span
 				>
 			{/if}
 			<span
