@@ -132,6 +132,7 @@
 	// drag across the range doesn't re-encode a 1000px raster image on every tick.
 	let sliderValue = $state(initialSize());
 	let renderSize = $state(initialSize());
+	let renderedSize = $state(initialSize());
 
 	// Nothing is encoded until there is real content, so the preview never offers a
 	// download for a QR the user didn't ask for.
@@ -142,18 +143,18 @@
 	let svgUrl = $state<string | null>(null);
 	let rasterData = $state<string | null>(null);
 	let rasterSource = $state<string | null>(null);
+	let rasterFileSize = $state<number | null>(null);
 	let rasterRendering = $state(false);
-	let downloadUrl = $derived(
-		type === 'svg' ? svgUrl : rasterRendering ? null : rasterData
+	let downloadUrl = $derived(type === 'svg' ? svgUrl : rasterData);
+	let rasterPending = $derived(
+		type !== 'svg' && !!qrCode && (rasterRendering || sliderValue !== renderedSize)
 	);
 	let fileSize = $derived(
 		!qrCode
 			? null
 			: type === 'svg'
 				? new Blob([qrCode], { type: 'image/svg+xml' }).size
-				: rasterData && !rasterRendering
-					? dataUrlSize(rasterData)
-					: null
+				: rasterFileSize
 	);
 
 	// One object URL per QR revision, revoked as soon as it is superseded.
@@ -168,13 +169,15 @@
 	});
 
 	// Rasterising is async, so a slow large render must not overwrite a newer one.
-	// Keep the previous image painted during size-only renders to avoid a preview flash.
+	// During size-only renders, keep every visible value from the last completed raster
+	// until the replacement is ready. That avoids flashes in the preview, badges and button.
 	let renderId = 0;
 	$effect(() => {
 		if (!qrCode || !isRasterType(type)) {
 			++renderId;
 			rasterData = null;
 			rasterSource = null;
+			rasterFileSize = null;
 			rasterRendering = false;
 			return;
 		}
@@ -183,24 +186,33 @@
 		const svg = qrCode;
 		const size = renderSize;
 		const outputType = type;
+		const source = `${outputType}\0${svg}`;
+		const sourceChanged = rasterSource !== source;
 
-		// A size change doesn't alter the QR modules, so the previous raster is a valid
-		// visual placeholder until the new dimensions finish encoding. Content/ECC changes
-		// clear it so we never display a QR for stale data.
-		if (rasterSource !== svg) rasterData = null;
+		// Only size changes may reuse the old raster as a visual placeholder. A content,
+		// ECC or format change must never show or download data for the previous QR.
+		if (sourceChanged) {
+			rasterData = null;
+			rasterFileSize = null;
+		}
 		rasterRendering = true;
 
 		svgToRaster(svg, size, size, outputType)
 			.then((data) => {
 				if (id !== renderId) return;
 				rasterData = data;
-				rasterSource = svg;
+				rasterSource = source;
+				rasterFileSize = dataUrlSize(data);
+				renderedSize = size;
 				rasterRendering = false;
 			})
 			.catch(() => {
 				if (id !== renderId) return;
-				rasterData = null;
-				rasterSource = null;
+				if (sourceChanged) {
+					rasterData = null;
+					rasterSource = null;
+					rasterFileSize = null;
+				}
 				rasterRendering = false;
 			});
 	});
@@ -340,7 +352,7 @@
 			{#if type !== 'svg'}
 				<span
 					class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
-					>{sliderValue}×{sliderValue}</span
+					>{renderedSize}×{renderedSize}</span
 				>
 			{/if}
 			{#if fileSize !== null}
@@ -360,12 +372,17 @@
 			>
 		</div>
 
-		<!-- With no href the Button renders a real <button>, so `disabled` actually
-		     blocks activation rather than just dimming a live link. -->
+		<!-- Keep the completed download visually stable during a size-only re-render. The
+		     click is blocked until the selected size has caught up, so stale dimensions
+		     can never be downloaded even though the button doesn't flash disabled. -->
 		<Button
 			download={downloadUrl ? `qr-code.${type}` : undefined}
 			href={downloadUrl ?? undefined}
 			disabled={!downloadUrl}
+			aria-disabled={rasterPending || undefined}
+			onclick={(event) => {
+				if (rasterPending) event.preventDefault();
+			}}
 			class="w-full max-w-xs"
 		>
 			<Download class="mr-2 size-4" />
