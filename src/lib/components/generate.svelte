@@ -141,13 +141,17 @@
 
 	let svgUrl = $state<string | null>(null);
 	let rasterData = $state<string | null>(null);
-	let downloadUrl = $derived(type === 'svg' ? svgUrl : rasterData);
+	let rasterSource = $state<string | null>(null);
+	let rasterRendering = $state(false);
+	let downloadUrl = $derived(
+		type === 'svg' ? svgUrl : rasterRendering ? null : rasterData
+	);
 	let fileSize = $derived(
 		!qrCode
 			? null
 			: type === 'svg'
 				? new Blob([qrCode], { type: 'image/svg+xml' }).size
-				: rasterData
+				: rasterData && !rasterRendering
 					? dataUrlSize(rasterData)
 					: null
 	);
@@ -164,11 +168,14 @@
 	});
 
 	// Rasterising is async, so a slow large render must not overwrite a newer one.
+	// Keep the previous image painted during size-only renders to avoid a preview flash.
 	let renderId = 0;
 	$effect(() => {
 		if (!qrCode || !isRasterType(type)) {
 			++renderId;
 			rasterData = null;
+			rasterSource = null;
+			rasterRendering = false;
 			return;
 		}
 
@@ -176,14 +183,25 @@
 		const svg = qrCode;
 		const size = renderSize;
 		const outputType = type;
-		rasterData = null;
+
+		// A size change doesn't alter the QR modules, so the previous raster is a valid
+		// visual placeholder until the new dimensions finish encoding. Content/ECC changes
+		// clear it so we never display a QR for stale data.
+		if (rasterSource !== svg) rasterData = null;
+		rasterRendering = true;
 
 		svgToRaster(svg, size, size, outputType)
 			.then((data) => {
-				if (id === renderId) rasterData = data;
+				if (id !== renderId) return;
+				rasterData = data;
+				rasterSource = svg;
+				rasterRendering = false;
 			})
 			.catch(() => {
-				if (id === renderId) rasterData = null;
+				if (id !== renderId) return;
+				rasterData = null;
+				rasterSource = null;
+				rasterRendering = false;
 			});
 	});
 
